@@ -4,6 +4,9 @@ from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 from math import sqrt
 
+class InvalidDataException(Exception):
+    pass
+
 # Create class DataProfessor to load the data
 class DataProcessor:
     def __init__(self, training_data_file, ideal_functions_file, test_data_file):
@@ -19,16 +22,13 @@ class DataProcessor:
 
     # Create class find_best_fits
     def find_best_fits(self):
-        try:
         # Iterate through the four training datasets
             for i in range (1, 5):
                 # Calculate sum of squared deviations for each ideal function
-                deviations = (self.ideal_functions.drop(columns=["x"])) - self.training_data[f"y{i}"]) ** 2
+                deviations = (self.ideal_functions.drop(columns=["x"])) - self.training_data([f"y{i}"]) ** 2
                 # Find the index of the ideal function with the minimum deviation
                 best_fit_index = deviations.sum(axis=1).idxmin()
                 self.best_fits.append(best_fit_index)
-        except Exception as e:
-            raise e
         
     def validate_selection(self):
         for i in range(4):
