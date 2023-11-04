@@ -4,32 +4,34 @@ from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 from math import sqrt
 
-class InvalidDataException(Exception):
-    pass
-
-# Create class DataProfessor to load the data
 class DataProcessor:
     def __init__(self, training_data_file, ideal_functions_file, test_data_file):
-        # Create SQLAlchemy engine
-        self.engine = create_engine("sqlite:///data.db")
-        # Load training data, ideal functions, and test data from csv-files
-        self.training_data = pd.read_csv("train.csn")
-        self.ideal_functions = pd.read_csv("ideal.csv")
-        self.test_data = pd.read_csv("test.csv")
+        try:
+            # Create SQLAlchemy engine
+            self.engine = create_engine("sqlite:///data.db")
+            # Load training data, ideal functions, and test data from CSV files
+            self.training_data = pd.read_csv("train.csv")
+            self.ideal_functions = pd.read_csv("ideal.csv")
+            self.test_data = pd.read_csv("test.csv")
+        except Exception as e:
+            print(f"An error occured during initializiation: {str(e)}")
+            self.engine = None
+            self.training_data = None
+            self.ideal_functions = None
+            self.test_data = None
         # Initialize empty lists to store best fits and deviations
         self.best_fits = []
         self.deviations = []
 
-    # Create class find_best_fits
     def find_best_fits(self):
         # Iterate through the four training datasets
-            for i in range (1, 5):
-                # Calculate sum of squared deviations for each ideal function
-                deviations = (self.ideal_functions.drop(columns=["x"])) - self.training_data([f"y{i}"]) ** 2
-                # Find the index of the ideal function with the minimum deviation
-                best_fit_index = deviations.sum(axis=1).idxmin()
-                self.best_fits.append(best_fit_index)
-        
+        for i in range(1, 5):
+            # Calculate sum of squared deviations for each ideal function
+            deviations = (self.ideal_functions.drop(columns=["x"]) - self.training_data[f"y{i}"]) ** 2
+            # Find the index of the ideal function with the minimum deviation
+            best_fit_index = deviations.sum(axis=1).idxmin()
+            self.best_fits.append(best_fit_index)
+
     def validate_selection(self):
         for i in range(4):
             ideal_function = self.ideal_functions.iloc[:, self.best_fits[i]]
@@ -79,3 +81,26 @@ class DataProcessor:
         plt.ylabel("y")
         # Show the plot
         plt.show()
+
+def main():
+    try:
+        # Create DataProcessor object
+        data_processor = DataProcessor("train.csv", "ideal.csv", "test.csv")
+        # Find the four best fits
+        data_processor.find_best_fits()
+        # Validate the selection using the test data
+        data_processor.validate_selection()
+        # Save data to SQLite database
+        data_processor.save_to_db()
+        # Plot the data
+        data_processor.plot_data()
+    except DataLoadError as e:
+        print(f"Data loading error: {str(e)}")
+    except Exception as e:
+        print(f"An error occured in the main process: {str(e)}")
+
+# Run the main function
+if __name__ == "__main__":
+    main()
+
+
